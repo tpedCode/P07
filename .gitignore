@@ -1,6 +1,9 @@
 *.csv
 *.parquet
 *.pkl
+!models/
+!models/*.pkl
+
 __pycache__/
 .ipynb_checkpoints/
 .env
