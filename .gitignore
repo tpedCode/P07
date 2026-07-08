@@ -4,3 +4,11 @@
 __pycache__/
 .ipynb_checkpoints/
 .env
+
+# Environnements virtuels
+mlflow_env/
+.venv/
+venv/
+
+# MLflow
+mlflow/
