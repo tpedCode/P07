@@ -1,0 +1,208 @@
+======================================================================
+TESTS RENDER — API HOME CREDIT SCORING
+======================================================================
+
+STATUT GLOBAL
+-------------
+✅ Test 1 — Déploiement Render
+✅ Test 2 — Endpoint /
+✅ Test 3 — Endpoint /health
+✅ Test 4 — Swagger public
+✅ Test 5 — Prédiction nominale
+<br>
+
+======================================================================
+TEST 1 — DEPLOIEMENT RENDER
+======================================================================
+
+RESULTAT
+---------
+Service Render créé :
+- Nom : p07-home-credit-scoring
+- Branche : feat/api
+- Runtime : Python 3
+
+Logs Render :
+```text
+Application startup complete.
+Your service is live 🎉
+```
+
+URL publique :
+```text
+https://p07-home-credit-scoring.onrender.com
+```
+
+CONCLUSION
+----------
+✅ Déploiement réussi.
+✅ Service accessible depuis Internet.
+<br>
+
+======================================================================
+TEST 2 — ENDPOINT D'ACCUEIL (/)
+======================================================================
+
+URL
+----
+```text
+https://p07-home-credit-scoring.onrender.com
+```
+
+RESULTAT OBSERVE
+----------------
+```json
+{
+  "status": "ok",
+  "model": "LGBMClassifier",
+  "n_features": 246,
+  "n_required_features": 5,
+  "n_recommended_features": 6,
+  "business_threshold": 0.090909
+}
+```
+
+CONCLUSION
+----------
+✅ API accessible.
+✅ Modèle chargé.
+✅ Seuil métier chargé.
+✅ Feature names chargées.
+<br>
+
+======================================================================
+TEST 3 — ENDPOINT SANTE (/health)
+======================================================================
+
+URL
+----
+```text
+https://p07-home-credit-scoring.onrender.com/health
+```
+
+RESULTAT OBSERVE
+----------------
+```json
+{
+  "status": "healthy"
+}
+```
+
+CONCLUSION
+----------
+✅ Endpoint santé opérationnel.
+✅ API disponible.
+<br>
+
+======================================================================
+TEST 4 — SWAGGER PUBLIC
+======================================================================
+
+URL
+----
+```text
+https://p07-home-credit-scoring.onrender.com/docs
+```
+
+RESULTAT OBSERVE
+----------------
+Swagger accessible avec les endpoints :
+- GET /
+- GET /health
+- POST /predict
+
+CONCLUSION
+----------
+✅ Documentation publique accessible.
+✅ Tests API possibles depuis Internet.
+<br>
+
+======================================================================
+TEST 5 — PREDICTION NOMINALE
+======================================================================
+
+JSON ENVOYE
+-----------
+```json
+{
+  "requested_by": "test_render",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+```
+
+RESULTAT OBSERVE
+----------------
+```json
+{
+  "requested_by": "test_render",
+  "n_clients": 1,
+  "predictions": [
+    {
+      "client_index": 0,
+      "default_probability": 0.33874,
+      "business_threshold": 0.090909,
+      "decision": "REFUSED",
+      "feature_coverage_rate": 18.91,
+      "prediction_quality": "LOW",
+      "missing_recommended_features": [
+        "EXT_SOURCE_1",
+        "EXT_SOURCE_2",
+        "EXT_SOURCE_3",
+        "DAYS_ID_PUBLISH",
+        "DAYS_REGISTRATION",
+        "DAYS_LAST_PHONE_CHANGE"
+      ]
+    }
+  ]
+}
+```
+
+CONCLUSION
+----------
+✅ Prédiction réalisée avec succès.
+✅ Modèle chargé correctement sur Render.
+✅ Seuil métier appliqué.
+✅ KPI métier retournés.
+✅ Résultat identique aux tests locaux.
+<br>
+
+======================================================================
+BILAN FINAL
+======================================================================
+
+✅ Déploiement Render réussi
+✅ API publique accessible
+✅ Swagger public accessible
+✅ Endpoint d'accueil validé
+✅ Endpoint santé validé
+✅ Endpoint prédiction validé
+✅ Chargement du modèle validé
+✅ Chargement du seuil validé
+✅ Chargement des feature names validé
+✅ Cohérence entre environnement local et cloud validée
+✅ Livrable 1 terminé
+<br>
+
+URL PUBLIQUE
+------------
+```text
+https://p07-home-credit-scoring.onrender.com
+```
+
+SWAGGER PUBLIC
+--------------
+```text
+https://p07-home-credit-scoring.onrender.com/docs
+```
+
+STATUT
+-------
+✅ API déployée et opérationnelle sur le cloud
