@@ -1,0 +1,325 @@
+======================================================================
+TESTS LOCAUX — API HOME CREDIT SCORING
+======================================================================
+
+STATUT GLOBAL
+--------------
+✅ Test 1 — Démarrage API
+✅ Test 2 — Swagger
+✅ Test 3 — Endpoint /
+✅ Test 4 — Endpoint /health
+✅ Test 5 — Prédiction nominale
+✅ Test 6 — Variable obligatoire absente
+✅ Test 7 — Type invalide
+✅ Test 8 — Booléen
+✅ Test 9 — Variable inconnue
+✅ Test 10 — Variables recommandées
+✅ Test 11 — Variable optionnelle
+✅ Test 12 — Multi-clients
+✅ Test 13 — Liste vide
+✅ Test 14 — Ancien format
+
+======================================================================
+TEST 5 — PREDICTION NOMINALE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT OBSERVE
+----------------
+- default_probability ≈ 0.338740
+- decision = REFUSED
+- feature_coverage_rate = 18.91
+- prediction_quality = LOW
+- n_missing_optional_features = 235
+
+CONCLUSION
+----------
+✅ Prédiction réalisée correctement.
+
+======================================================================
+TEST 6 — VARIABLE OBLIGATOIRE ABSENTE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT
+---------
+HTTP 422
+DAYS_BIRTH détecté comme champ obligatoire.
+
+CONCLUSION
+----------
+✅ Validation des champs obligatoires.
+
+======================================================================
+TEST 7 — TYPE INVALIDE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": "bonjour",
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT
+---------
+HTTP 422
+"La valeur doit être numérique."
+
+CONCLUSION
+----------
+✅ Validation du type numérique.
+
+======================================================================
+TEST 8 — BOOLEEN
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": true,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT
+---------
+HTTP 422
+"La valeur doit être numérique, pas booléenne."
+
+CONCLUSION
+----------
+✅ Rejet explicite des booléens.
+
+======================================================================
+TEST 9 — VARIABLE INCONNUE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000,
+      "BONJOUR": 123
+    }
+  ]
+}
+
+RESULTAT
+---------
+HTTP 422
+Variables inconnues du modèle : ['BONJOUR']
+
+CONCLUSION
+----------
+✅ Détection des champs parasites ou fautes de frappe.
+
+======================================================================
+TEST 10 — VARIABLES RECOMMANDEES
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000,
+      "EXT_SOURCE_1": 0.50,
+      "EXT_SOURCE_2": 0.60,
+      "EXT_SOURCE_3": 0.70,
+      "DAYS_ID_PUBLISH": -3000,
+      "DAYS_REGISTRATION": -4000,
+      "DAYS_LAST_PHONE_CHANGE": -500
+    }
+  ]
+}
+
+RESULTAT
+---------
+- feature_coverage_rate : 18.91 %
+→ 33.58 %
+- missing_recommended_features : []
+- decision : ACCEPTED
+
+CONCLUSION
+----------
+✅ Les variables recommandées enrichissent fortement la prédiction.
+
+======================================================================
+TEST 11 — VARIABLE OPTIONNELLE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000,
+      "BURO_DAYS_CREDIT_MEAN": -1200
+    }
+  ]
+}
+
+RESULTAT
+---------
+- feature_coverage_rate : 18.91 %
+→ 21.16 %
+- n_missing_optional_features : 235
+→ 234
+
+CONCLUSION
+----------
+✅ Les variables optionnelles sont prises en compte par le modèle.
+
+======================================================================
+TEST 12 — MULTI-CLIENTS
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    },
+    {
+      "PAYMENT_RATE": 0.12,
+      "EXT_SOURCE_MEAN": 0.30,
+      "DAYS_BIRTH": -10000,
+      "DAYS_EMPLOYED": -500,
+      "AMT_ANNUITY": 25000
+    }
+  ]
+}
+
+RESULTAT
+---------
+- n_clients = 2
+- predictions contient 2 résultats
+
+CONCLUSION
+----------
+✅ Fonctionnement batch validé.
+
+======================================================================
+TEST 13 — LISTE VIDE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_swagger",
+  "clients": []
+}
+
+RESULTAT
+---------
+HTTP 422
+List should have at least 1 item after validation.
+
+CONCLUSION
+----------
+✅ Validation de min_length=1.
+
+======================================================================
+TEST 14 — ANCIEN FORMAT DE REQUETE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "PAYMENT_RATE": 0.05,
+  "EXT_SOURCE_MEAN": 0.60,
+  "DAYS_BIRTH": -15000,
+  "DAYS_EMPLOYED": -2000,
+  "AMT_ANNUITY": 15000
+}
+
+RESULTAT
+---------
+HTTP 422
+Field required : clients
+
+CONCLUSION
+----------
+✅ Nouveau contrat d'entrée respecté.
+
+======================================================================
+BILAN FINAL
+======================================================================
+
+✅ API fonctionnelle
+✅ Validation des données fonctionnelle
+✅ Gestion des erreurs fonctionnelle
+✅ Gestion des variables obligatoires validée
+✅ Gestion des variables recommandées validée
+✅ Gestion des variables optionnelles validée
+✅ Gestion multi-clients validée
+✅ Calcul des KPI métier validé :
+- feature_coverage_rate
+- prediction_quality
+- warning
+✅ Campagne complète de tests Swagger terminée

@@ -233,8 +233,8 @@ class ClientData(BaseModel):
 
     Choix techniques :
     - Pydantic valide automatiquement les champs obligatoires ;
-    - extra="allow" autorise l'envoi de variables supplémentaires ;
-    - les variables supplémentaires seront utilisées uniquement si elles existent dans feature_names ;
+    - extra="allow" autorise l'envoi des variables recommandées et optionnelles en plus des variables obligatoires ;
+    - les variables reçues sont ensuite contrôlées par rapport aux variables connues du modèle ;
     - les booléens sont refusés car True/False ne sont pas des valeurs métier numériques valides.
 
     Entrée / Sortie :
@@ -294,10 +294,10 @@ class ClientData(BaseModel):
         - garantir un minimum de cohérence avant l'appel au modèle.
 
         Choix techniques :
-        - Pydantic valide automatiquement les champs obligatoires ;
-        - extra="allow" autorise l'envoi des variables recommandées et optionnelles en plus des variables obligatoires ;
-        - les variables reçues sont ensuite contrôlées par rapport aux variables connues du modèle ;
-        - les booléens sont refusés car True/False ne sont pas des valeurs métier numériques valides.
+        - contrôle réalisé avant conversion Pydantic ;
+        - rejet des booléens ;
+        - rejet des chaînes de caractères ;
+        - seules les valeurs numériques sont autorisées.
 
         Entrée / Sortie :
         - entrée : valeur reçue pour une variable obligatoire ;
@@ -440,29 +440,43 @@ def health():
 def validate_optional_features(client_data: dict):
     """
     Objectif :
-    - vérifier la cohérence des variables optionnelles ou recommandées envoyées à l'API.
+    - vérifier la cohérence des variables recommandées et optionnelles envoyées à l'API ;
+    - s'assurer que seules les variables connues du modèle sont transmises.
 
     Choix métiers :
     - une variable utilisée par le modèle doit rester exploitable ;
     - une valeur textuelle ou booléenne ne doit pas être transmise au modèle ;
-    - les variables inconnues ne bloquent pas la prédiction, car elles seront ignorées.
+    - toute variable inconnue du modèle est considérée comme une erreur de saisie ou de mapping ;
+    - la prédiction est refusée lorsqu'une variable inconnue est détectée.
 
     Choix techniques :
-    - seules les variables présentes dans feature_names sont contrôlées ;
-    - les variables inconnues sont ignorées ;
+    - les variables reçues sont comparées à feature_names ;
+    - une erreur est levée si une variable inconnue est présente ;
+    - les variables connues doivent être numériques ;
     - une erreur est levée avant predict_proba en cas de donnée invalide.
 
     Entrée / Sortie :
     - entrée : dictionnaire des données d'un client ;
     - sortie : aucune sortie directe ;
-    - exception : ValueError si une variable connue du modèle n'est pas numérique.
+    - exception :
+        - ValueError si une variable inconnue du modèle est détectée ;
+        - ValueError si une variable connue du modèle n'est pas numérique.
     """
 
-    for key, value in client_data.items():
+    # Vérifie qu'aucune variable inconnue du modèle n'est fournie.
+    unknown_features = [
+        key
+        for key in client_data.keys()
+        if key not in feature_names
+    ]
 
-        # Les variables inconnues du modèle seront ignorées plus tard.
-        if key not in feature_names:
-            continue
+    if unknown_features:
+        raise ValueError(
+            f"Variables inconnues du modèle : {unknown_features}"
+        )
+
+    # Vérifie que les variables connues du modèle sont numériques.
+    for key, value in client_data.items():
 
         if isinstance(value, bool):
             raise ValueError(
@@ -755,6 +769,7 @@ def predict_single_client(client: ClientData, client_index: int):
     # Construction du warning métier.
     warning = build_warning(
         prediction_quality=prediction_quality,
+        feature_coverage_rate=feature_coverage_rate,
         missing_recommended_features=missing_recommended_features,
         n_missing_optional_features=n_missing_optional_features
     )
@@ -767,7 +782,7 @@ def predict_single_client(client: ClientData, client_index: int):
         "feature_coverage_rate": feature_coverage_rate,
         "prediction_quality": prediction_quality,
         "missing_recommended_features": missing_recommended_features,
-        "missing_optional_features": n_missing_optional_features,
+        "n_missing_optional_features": n_missing_optional_features,
         "warning": warning
     }
 
