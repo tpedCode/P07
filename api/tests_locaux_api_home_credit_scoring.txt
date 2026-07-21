@@ -2,6 +2,36 @@
 TESTS LOCAUX — API HOME CREDIT SCORING
 ======================================================================
 
+
+PROCÉDURE — REFAIRE LES TESTS LOCAUX
+--------------
+1. Ouvrir le projet P07 dans VS Code.
+2. Ouvrir un terminal dans VS Code.
+3. Activer l'environnement virtuel : ```bash source venv/Scripts/activate````
+4. Démarrer l'API : ```bash uvicorn api_home_credit_scoring:app --reload ```
+5. Vérifier dans le terminal que l'API est démarrée : ```text Application startup complete. ```
+6. Ouvrir Swagger dans le navigateur : [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+7. Tester les endpoints dans Swagger, dans cet ordre :
+   * `GET /` → Test 1
+   * `GET /health` → Test 2
+   * `POST /predict` → Tests 3 à 14
+8. Pour chaque test `POST /predict` :
+   * Cliquer sur **Try it out**.
+   * Coller le JSON du test.
+   * Cliquer sur **Execute**.
+   * Relever le code HTTP.
+   * Relever le **Response body**.
+   * Copier le résultat observé dans le compte rendu.
+9. Vérifier que le résultat correspond au comportement attendu du test.
+10. Une fois tous les tests terminés, arrêter l'API avec : ```text CTRL + C```
+
+## LIENS RAPIDES
+API :[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+Santé :[http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+Swagger :[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+Prédiction :[http://127.0.0.1:8000/predict](http://127.0.0.1:8000/predict)
+
+
 STATUT GLOBAL
 --------------
 ✅ Test 1 — Démarrage API
@@ -20,13 +50,98 @@ STATUT GLOBAL
 ✅ Test 14 — Ancien format
 
 ======================================================================
+TEST 1 — DÉMARRAGE API
+======================================================================
+
+RESULTAT
+---------
+HTTP 200 OK
+
+L'API démarre correctement avec Uvicorn et est accessible localement.
+
+CONCLUSION
+----------
+✅ Serveur API démarré avec succès.
+✅ API accessible localement.
+
+
+======================================================================
+TEST 2 — SWAGGER
+======================================================================
+
+URL
+---
+http://127.0.0.1:8000/docs
+
+RESULTAT
+---------
+Swagger UI accessible.
+
+Endpoints disponibles :
+- GET /
+- GET /health
+- POST /predict
+
+CONCLUSION
+----------
+✅ Documentation Swagger accessible localement.
+✅ Les endpoints de l'API sont correctement exposés.
+✅ Les tests peuvent être réalisés directement depuis Swagger.
+
+
+======================================================================
+TEST 3 — ENDPOINT D'ACCUEIL (/)
+======================================================================
+
+RESULTAT
+---------
+HTTP 200 OK
+
+{
+  "status": "ok",
+  "model": "LGBMClassifier",
+  "n_features": 246,
+  "n_required_features": 5,
+  "n_recommended_features": 6,
+  "business_threshold": 0.090909
+}
+
+CONCLUSION
+----------
+✅ API accessible localement.
+✅ Modèle chargé.
+✅ 246 variables attendues par le modèle.
+✅ 5 variables obligatoires définies.
+✅ 6 variables recommandées définies.
+✅ Seuil métier chargé.
+
+
+======================================================================
+TEST 4 — ENDPOINT SANTE (/health)
+======================================================================
+
+RESULTAT
+---------
+HTTP 200 OK
+
+{
+  "status": "healthy"
+}
+
+CONCLUSION
+----------
+✅ Endpoint de santé opérationnel.
+✅ API locale disponible.
+
+
+======================================================================
 TEST 5 — PREDICTION NOMINALE
 ======================================================================
 
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_nominal",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -40,15 +155,35 @@ JSON ENVOYE
 
 RESULTAT OBSERVE
 ----------------
-- default_probability ≈ 0.338740
+HTTP 200
+
+- default_probability = 0.338740
+- business_threshold = 0.090909
 - decision = REFUSED
-- feature_coverage_rate = 18.91
-- prediction_quality = LOW
+- feature_coverage_rate = 18.91 %
+- data_completeness_level = LOW
+- missing_recommended_features :
+  - EXT_SOURCE_1
+  - EXT_SOURCE_2
+  - EXT_SOURCE_3
+  - DAYS_ID_PUBLISH
+  - DAYS_REGISTRATION
+  - DAYS_LAST_PHONE_CHANGE
 - n_missing_optional_features = 235
+
+WARNING
+-------
+Complétude pondérée : 18.91% (< 50%).
+La prédiction repose sur une faible couverture des variables importantes
+du modèle. Les données fournies sont incomplètes et le résultat doit être
+interprété avec prudence.
 
 CONCLUSION
 ----------
-✅ Prédiction réalisée correctement.
+✅ Prédiction techniquement réalisée avec succès.
+⚠️ La couverture pondérée des variables importantes reste faible (18,91 %).
+⚠️ Le niveau de complétude des données est classé LOW.
+✅ Le seuil métier optimisé de 0.090909 est correctement appliqué.
 
 ======================================================================
 TEST 6 — VARIABLE OBLIGATOIRE ABSENTE
@@ -57,7 +192,7 @@ TEST 6 — VARIABLE OBLIGATOIRE ABSENTE
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_required_missing",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -68,14 +203,21 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-DAYS_BIRTH détecté comme champ obligatoire.
+
+La variable obligatoire DAYS_BIRTH est absente.
+
+Message retourné :
+"type": "missing"
+"loc": ["body", "clients", 0, "DAYS_BIRTH"]
+"msg": "Field required"
 
 CONCLUSION
 ----------
-✅ Validation des champs obligatoires.
+✅ Validation des champs obligatoires fonctionnelle.
+✅ L'absence de DAYS_BIRTH est correctement détectée avant la prédiction.
 
 ======================================================================
 TEST 7 — TYPE INVALIDE
@@ -84,7 +226,7 @@ TEST 7 — TYPE INVALIDE
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_invalid_type",
   "clients": [
     {
       "PAYMENT_RATE": "bonjour",
@@ -96,14 +238,22 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-"La valeur doit être numérique."
+
+La variable PAYMENT_RATE contient une chaîne de caractères au lieu
+d'une valeur numérique.
+
+FastAPI/Pydantic retourne :
+"type": "value_error"
+"loc": ["body", "clients", 0, "PAYMENT_RATE"]
+"msg": "Value error, La valeur doit être numérique."
 
 CONCLUSION
 ----------
-✅ Validation du type numérique.
+✅ Validation du type numérique fonctionnelle.
+✅ Une valeur textuelle est correctement rejetée avant la prédiction.
 
 ======================================================================
 TEST 8 — BOOLEEN
@@ -112,7 +262,7 @@ TEST 8 — BOOLEEN
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_boolean",
   "clients": [
     {
       "PAYMENT_RATE": true,
@@ -124,23 +274,30 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-"La valeur doit être numérique, pas booléenne."
+
+La variable PAYMENT_RATE contient une valeur booléenne.
+
+FastAPI/Pydantic retourne :
+"type": "value_error"
+"loc": ["body", "clients", 0, "PAYMENT_RATE"]
+"msg": "Value error, La valeur doit être numérique, pas booléenne."
 
 CONCLUSION
 ----------
-✅ Rejet explicite des booléens.
+✅ Rejet explicite des valeurs booléennes fonctionnel.
+✅ La valeur true est correctement refusée avant la prédiction.
 
 ======================================================================
-TEST 9 — VARIABLE INCONNUE
+TEST 9 — ERREUR DE FRAPPE DANS LE NOM D'UNE VARIABLE
 ======================================================================
 
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_typo_error",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -148,19 +305,24 @@ JSON ENVOYE
       "DAYS_BIRTH": -15000,
       "DAYS_EMPLOYED": -2000,
       "AMT_ANNUITY": 15000,
-      "BONJOUR": 123
+      "PAYMENT_RAT": 0.05
     }
   ]
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-Variables inconnues du modèle : ['BONJOUR']
+
+La variable "PAYMENT_RAT" est inconnue du modèle.
+
+FastAPI retourne :
+"detail": "Variables inconnues du modèle : ['PAYMENT_RAT']"
 
 CONCLUSION
 ----------
-✅ Détection des champs parasites ou fautes de frappe.
+✅ Une erreur de frappe dans le nom d'une variable est correctement détectée.
+✅ L'API rejette la variable inconnue avant la prédiction.
 
 ======================================================================
 TEST 10 — VARIABLES RECOMMANDEES
@@ -169,7 +331,7 @@ TEST 10 — VARIABLES RECOMMANDEES
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_recommended_features",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -187,16 +349,30 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
-- feature_coverage_rate : 18.91 %
-→ 33.58 %
-- missing_recommended_features : []
+RESULTAT OBSERVE
+----------------
+HTTP 200
+
+- default_probability : 0.02199
+- business_threshold : 0.090909
 - decision : ACCEPTED
+- feature_coverage_rate : 33.58 %
+- data_completeness_level : LOW
+- missing_recommended_features : []
+- n_missing_optional_features : 235
+
+La couverture pondérée des variables importantes augmente :
+- Sans variables recommandées : 18.91 %
+- Avec variables recommandées : 33.58 %
 
 CONCLUSION
 ----------
-✅ Les variables recommandées enrichissent fortement la prédiction.
+✅ Les 6 variables recommandées sont correctement reconnues par l'API.
+✅ Aucune variable recommandée n'est signalée comme absente.
+✅ La couverture pondérée des variables importantes augmente de 18.91 % à 33.58 %.
+✅ La probabilité de défaut calculée est inférieure au seuil métier de 0.090909.
+✅ La décision retournée est ACCEPTED.
+⚠️ Malgré l'ajout des variables recommandées, le niveau de complétude reste LOW (< 50 %).
 
 ======================================================================
 TEST 11 — VARIABLE OPTIONNELLE
@@ -205,7 +381,7 @@ TEST 11 — VARIABLE OPTIONNELLE
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_optional_feature",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -218,16 +394,36 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
-- feature_coverage_rate : 18.91 %
-→ 21.16 %
-- n_missing_optional_features : 235
-→ 234
+RESULTAT OBSERVE
+----------------
+HTTP 200
+
+- default_probability : 0.277034
+- business_threshold : 0.090909
+- decision : REFUSED
+- feature_coverage_rate : 21.16 %
+- data_completeness_level : LOW
+- missing_recommended_features : [
+    "EXT_SOURCE_1",
+    "EXT_SOURCE_2",
+    "EXT_SOURCE_3",
+    "DAYS_ID_PUBLISH",
+    "DAYS_REGISTRATION",
+    "DAYS_LAST_PHONE_CHANGE"
+  ]
+- n_missing_optional_features : 234
+
+La couverture pondérée des variables importantes augmente :
+- Sans variable optionnelle : 18.91 %
+- Avec BURO_DAYS_CREDIT_MEAN : 21.16 %
 
 CONCLUSION
 ----------
-✅ Les variables optionnelles sont prises en compte par le modèle.
+✅ La variable optionnelle BURO_DAYS_CREDIT_MEAN est reconnue comme une variable valide du modèle.
+✅ La variable optionnelle est correctement prise en compte lors de la préparation des données.
+✅ Le nombre de variables optionnelles absentes diminue de 235 à 234.
+✅ La couverture pondérée des variables importantes augmente de 18.91 % à 21.16 %.
+⚠️ Le niveau de complétude reste LOW (< 50 %).
 
 ======================================================================
 TEST 12 — MULTI-CLIENTS
@@ -236,7 +432,7 @@ TEST 12 — MULTI-CLIENTS
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_multi_clients",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -255,14 +451,38 @@ JSON ENVOYE
   ]
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
+HTTP 200
+
+- requested_by = "test_multi_clients"
 - n_clients = 2
 - predictions contient 2 résultats
+
+Client 1 :
+- client_index = 0
+- default_probability = 0.338740
+- business_threshold = 0.090909
+- decision = REFUSED
+- feature_coverage_rate = 18.91 %
+- data_completeness_level = LOW
+- n_missing_optional_features = 235
+
+Client 2 :
+- client_index = 1
+- default_probability = 0.872779
+- business_threshold = 0.090909
+- decision = REFUSED
+- feature_coverage_rate = 18.91 %
+- data_completeness_level = LOW
+- n_missing_optional_features = 235
 
 CONCLUSION
 ----------
 ✅ Fonctionnement batch validé.
+✅ Deux clients sont traités dans une seule requête.
+✅ Un résultat individuel est retourné pour chaque client.
+✅ Chaque client possède sa propre probabilité de défaut et sa propre décision.
 
 ======================================================================
 TEST 13 — LISTE VIDE
@@ -271,21 +491,28 @@ TEST 13 — LISTE VIDE
 JSON ENVOYE
 -----------
 {
-  "requested_by": "test_swagger",
+  "requested_by": "test_empty_clients",
   "clients": []
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-List should have at least 1 item after validation.
+
+FastAPI/Pydantic retourne :
+
+"type": "too_short"
+"loc": ["body", "clients"]
+"msg": "List should have at least 1 item after validation, not 0"
 
 CONCLUSION
 ----------
-✅ Validation de min_length=1.
+✅ Validation de la liste des clients fonctionnelle.
+✅ Une requête contenant une liste vide est correctement rejetée.
+✅ La contrainte min_length=1 est correctement appliquée.
 
 ======================================================================
-TEST 14 — ANCIEN FORMAT DE REQUETE
+TEST 14 — ANCIEN FORMAT DE REQUÊTE
 ======================================================================
 
 JSON ENVOYE
@@ -298,28 +525,42 @@ JSON ENVOYE
   "AMT_ANNUITY": 15000
 }
 
-RESULTAT
----------
+RESULTAT OBSERVE
+----------------
 HTTP 422
-Field required : clients
+
+FastAPI/Pydantic retourne :
+
+"type": "missing"
+"loc": ["body", "clients"]
+"msg": "Field required"
 
 CONCLUSION
 ----------
-✅ Nouveau contrat d'entrée respecté.
+✅ L'ancien format de requête est correctement rejeté.
+✅ Le champ clients est correctement identifié comme obligatoire.
+✅ Le nouveau contrat d'entrée de l'API est respecté.
+
 
 ======================================================================
 BILAN FINAL
 ======================================================================
 
 ✅ API fonctionnelle
+✅ Démarrage de l'API validé
+✅ Documentation Swagger accessible
+✅ Endpoint d'accueil validé
+✅ Endpoint de santé validé
 ✅ Validation des données fonctionnelle
 ✅ Gestion des erreurs fonctionnelle
 ✅ Gestion des variables obligatoires validée
 ✅ Gestion des variables recommandées validée
 ✅ Gestion des variables optionnelles validée
 ✅ Gestion multi-clients validée
-✅ Calcul des KPI métier validé :
+✅ Calcul des indicateurs de couverture des données validé :
 - feature_coverage_rate
-- prediction_quality
+- data_completeness_level
 - warning
+✅ Nouveau contrat d'entrée validé
+✅ Ancien format de requête correctement rejeté
 ✅ Campagne complète de tests Swagger terminée
