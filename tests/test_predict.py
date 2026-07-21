@@ -51,7 +51,7 @@ def test_predict_nominal():
     assert "default_probability" in prediction
     assert "decision" in prediction
     assert "feature_coverage_rate" in prediction
-    assert "prediction_quality" in prediction
+    assert "data_completeness_level" in prediction
 
 
 def test_predict_missing_required_feature():
