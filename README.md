@@ -1,40 +1,50 @@
 # Home Credit Scoring
 
-## Contexte métier
+## Présentation du projet
 
-La société fictive "Prêt à Dépenser" souhaite développer un outil d’aide à la décision pour l’octroi de crédits.
+Projet réalisé dans le cadre de la formation **Data Scientist OpenClassrooms** pour la société fictive **« Prêt à Dépenser »**.
 
-L’objectif est d’estimer le risque de défaut de paiement d’un client à partir de ses caractéristiques et de fournir une décision métier exploitable.
+L'objectif est de développer un outil de **scoring crédit** permettant d'estimer la probabilité de défaut d'un client et de fournir une décision d'aide à l'octroi du crédit.
 
-Ce projet couvre l'ensemble du cycle de vie d'un modèle de Machine Learning :
+Le projet couvre le cycle de vie complet du modèle :
 
-- préparation des données ;
-- feature engineering ;
-- modélisation ;
-- explicabilité ;
-- MLOps ;
-- déploiement sous forme d'API ;
-- surveillance du data drift.
-
----
-
-## Objectif du projet
-
-Développer une solution de scoring crédit capable de :
-
-- prédire le risque de défaut d'un client ;
-- optimiser la prise de décision grâce à un seuil métier ;
-- fournir une décision ACCEPTED ou REFUSED ;
-- expliquer les prédictions ;
-- exposer le modèle via une API ;
-- suivre les expérimentations avec MLflow ;
-- surveiller l'évolution des données avec Evidently.
+- préparation et feature engineering des données ;
+- modélisation et optimisation ;
+- explicabilité des prédictions ;
+- tracking des expérimentations avec MLflow ;
+- gestion du modèle avec le Model Registry ;
+- déploiement du modèle sous forme d'API ;
+- tests automatisés avec Pytest et GitHub Actions ;
+- détection du data drift avec Evidently.
 
 ---
 
-## Structure du projet
+## Modèle
 
-```text
+Le modèle final retenu est un **LightGBM**.
+
+La sélection du modèle repose notamment sur :
+
+- la validation croisée ;
+- l'optimisation des hyperparamètres ;
+- l'optimisation du seuil de décision selon le coût métier.
+
+Les principaux artefacts utilisés par l'API sont :
+
+best_model.pkl
+threshold.pkl
+feature_names.pkl
+
+L'explicabilité du modèle est étudiée à l'aide de :
+
+* Feature Importance globale ;
+* SHAP global ;
+* SHAP local.
+
+---
+
+## Architecture du projet
+
 P07/
 │
 ├── api/
@@ -49,139 +59,67 @@ P07/
 │   └── notebook_modelisation.ipynb
 │
 ├── tests/
+│   ├── test_health.py
+│   ├── test_home.py
+│   └── test_predict.py
 │
 ├── documentation/
-│   └── tests_swagger_api.md
+│   ├── tests_swagger_api.md
+│   ├── tests_render.md
+│   ├── tests_pytest.md
+│   └── tests_github_actions.md
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── requirements.txt
 │
 └── README.md
-```
 
----
+### Principaux dossiers
 
-## Modèle retenu
-
-Modèle final :
-
-```text
-LightGBM
-```
-
-Travail réalisé :
-
-- validation croisée ;
-- optimisation des hyperparamètres ;
-- optimisation du seuil métier ;
-- sélection du meilleur modèle.
-
-Artefacts sauvegardés :
-
-```text
-best_model.pkl
-threshold.pkl
-feature_names.pkl
-```
-
----
-
-## Explicabilité
-
-Les analyses suivantes ont été réalisées :
-
-- Feature Importance globale ;
-- SHAP global ;
-- SHAP local.
+| Dossier              | Description                               |
+| -------------------- | ----------------------------------------- |
+| `api/`               | Code de l'API FastAPI                     |
+| `models/`            | Modèle et artefacts utilisés par l'API    |
+| `notebooks/`         | Code de modélisation et d'analyse         |
+| `tests/`             | Tests automatisés avec Pytest             |
+| `documentation/`     | Documentation et comptes rendus des tests |
+| `.github/workflows/` | Configuration du pipeline GitHub Actions  |
 
 ---
 
 ## MLOps
 
-Le projet intègre :
+Le projet met en œuvre plusieurs composants MLOps :
 
-- MLflow Tracking ;
-- MLflow UI ;
-- Model Registry ;
-- Serving du modèle.
-
----
-
-## API de prédiction
-
-L'API expose les endpoints suivants.
-
-### GET /
-
-Retourne :
-
-- le statut de l’API ;
-- le modèle chargé ;
-- le seuil métier ;
-- le nombre de variables attendues.
-
-### GET /health
-
-Permet de vérifier que l’API est disponible.
-
-### POST /predict
-
-Retourne :
-
-- la probabilité de défaut ;
-- la décision métier ;
-- les indicateurs de qualité de prédiction.
+* **MLflow** : tracking des expérimentations ;
+* **MLflow UI** : visualisation des résultats ;
+* **MLflow Model Registry** : gestion centralisée des modèles ;
+* **MLflow Serving** : test du serving du modèle ;
+* **Git / GitHub** : versionnement du code ;
+* **GitHub Actions** : intégration continue et exécution automatique des tests ;
+* **Pytest** : tests automatisés de l'API ;
+* **Evidently** : analyse du data drift.
 
 ---
 
-## Catégories de variables
+## API
 
-L’API distingue trois catégories de variables.
+L'API est développée avec **FastAPI** et permet de :
 
-### Variables obligatoires
+* calculer une probabilité de défaut ;
+* appliquer le seuil métier optimisé ;
+* retourner une décision `ACCEPTED` ou `REFUSED` ;
+* gérer plusieurs clients dans une même requête ;
+* contrôler les données d'entrée.
 
-Ces variables doivent être présentes dans chaque requête.
+Endpoints principaux :
 
-```text
-PAYMENT_RATE
-EXT_SOURCE_MEAN
-DAYS_BIRTH
-DAYS_EMPLOYED
-AMT_ANNUITY
-```
-
-### Variables fortement recommandées
-
-Ces variables améliorent la qualité de la prédiction mais ne bloquent pas l’API lorsqu’elles sont absentes.
-
-### Variables optionnelles
-
-Toutes les autres variables connues du modèle.
-
-Elles sont utilisées lorsqu’elles sont fournies.
-
----
-
-## Indicateurs métier
-
-L'API fournit plusieurs indicateurs destinés à faciliter l'interprétation de la prédiction.
-
-### feature_coverage_rate
-
-Mesure la part d’importance du modèle couverte par les variables réellement fournies.
-
-### prediction_quality
-
-Niveau de qualité associé à la prédiction :
-
-```text
-LOW
-MEDIUM
-HIGH
-```
-
-### warning
-
-Message explicatif destiné à informer l’utilisateur sur la qualité des données utilisées.
+GET  /
+GET  /health
+POST /predict
 
 ---
 
@@ -207,7 +145,7 @@ pip install -r requirements.txt
 
 ---
 
-## Lancement de l'API
+## Lancement de l'API en local
 
 Depuis la racine du projet :
 
@@ -223,55 +161,36 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## Exemple de requête
+## Tests
 
-```json
-{
-  "requested_by": "test_swagger",
-  "clients": [
-    {
-      "PAYMENT_RATE": 0.05,
-      "EXT_SOURCE_MEAN": 0.60,
-      "DAYS_BIRTH": -15000,
-      "DAYS_EMPLOYED": -2000,
-      "AMT_ANNUITY": 15000
-    }
-  ]
-}
+Les tests automatisés sont exécutés avec Pytest :
+
+```bash
+pytest -v
 ```
 
----
-
-## Validation de l'API
-
-Une campagne complète de tests Swagger a été réalisée :
-
-- démarrage de l’API ;
-- endpoint d’accueil ;
-- endpoint santé ;
-- prédiction nominale ;
-- variable obligatoire absente ;
-- type invalide ;
-- booléen ;
-- variable inconnue ;
-- variables recommandées ;
-- variable optionnelle ;
-- multi-clients ;
-- liste vide ;
-- ancien format de requête.
+Le workflow GitHub Actions exécute automatiquement les tests lors des événements configurés sur le dépôt.
 
 ---
 
-## Déploiement
+## API déployée
 
-API déployée sur Render :
+L'API est déployée sur **Render**.
+
+URL :
 
 ```text
-À compléter après le déploiement.
+https://p07-home-credit-scoring.onrender.com
+```
+
+Swagger :
+
+```text
+https://p07-home-credit-scoring.onrender.com/docs
 ```
 
 ---
 
 ## Auteur
 
-Projet réalisé dans le cadre de la formation Data Scientist OpenClassrooms.
+Projet réalisé dans le cadre de la formation **Data Scientist OpenClassrooms**.

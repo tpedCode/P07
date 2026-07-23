@@ -1,0 +1,164 @@
+# ==================================================
+# NOM DU WORKFLOW
+# ==================================================
+
+# Ce nom apparaît dans l'onglet :
+# GitHub -> Actions
+
+# Il permet d'identifier facilement le pipeline.
+
+# Exemple affiché :
+# CI ✅
+
+name: CI
+
+# ==================================================
+# DECLENCHEURS DU PIPELINE
+# ==================================================
+
+# Le workflow démarre automatiquement lorsqu'un événement GitHub se produit.
+
+on:
+    # ------------------------------------------------
+    # CAS 1 : PUSH
+    # ------------------------------------------------
+
+    # Déclenche le pipeline après un git push.
+
+    # Exemple :
+    # git add .
+    # git commit -m "..."
+    # git push
+
+    # -> GitHub démarre automatiquement le workflow.
+
+    push:
+        branches:
+            # Déclenchement sur la branche principale.
+            - main
+
+            # Déclenchement sur toutes les branches commençant par "feat/".
+
+            # Exemples :
+            # feat/api
+            # feat/ci-cd
+            # feat/data-drift
+
+            - feat/*
+
+    # ------------------------------------------------
+    # CAS 2 : PULL REQUEST
+    # ------------------------------------------------
+
+    # Déclenche également les tests lorsqu'une Pull Request est créée ou mise à jour.
+
+    # Exemple :
+    # feat/ci-cd
+    # ↓
+    # main
+
+    pull_request:
+        branches:
+            - main
+
+# ==================================================
+# TRAVAUX A EXECUTER
+# ==================================================
+
+# Un workflow peut contenir plusieurs jobs.
+# Ici nous n'avons qu'un seul job :
+# lancer pytest.
+
+jobs:
+    # Nom du job.
+    pytest:
+        # ------------------------------------------------
+        # MACHINE UTILISEE
+        # ------------------------------------------------
+
+        # GitHub crée automatiquement une machine Linux temporaire pour exécuter le pipeline.
+
+        runs-on: ubuntu-latest
+
+        # Liste des étapes à exécuter.
+        steps:
+            # ==============================================
+            # ETAPE 1
+            # Recuperation du depôt GitHub
+            # ==============================================
+
+            # Télécharge le contenu du dépôt dans la machine temporaire créée par GitHub.
+            # Sans cette étape aucun fichier du projet ne serait disponible.
+
+            - name: Checkout repository
+
+              uses: actions/checkout@v4
+
+            # ==============================================
+            # ETAPE 2
+            # Installation de Python
+            # ==============================================
+
+            # La machine GitHub est vide au départ.
+            # On installe la version Python utilisée dans le projet.
+
+            - name: Setup Python
+
+              uses: actions/setup-python@v5
+
+              with:
+                  # Même version que celle utilisée localement.
+                  python-version: "3.11"
+
+            # ==============================================
+            # ETAPE 3
+            # Installation des dépendances
+            # ==============================================
+            #
+            # Equivalent de ce que tu fais localement :
+            # pip install -r requirements.txt
+
+            # Toutes les bibliothèques du projet sont installées :
+            # - FastAPI
+            # - Pandas
+            # - Scikit-Learn
+            # - LightGBM
+            # - Pytest
+            # - etc.
+
+            - name: Install dependencies
+
+              run: |
+
+                  # Mise à jour de pip.
+                  python -m pip install --upgrade pip
+
+                  # Installation des dépendances du projet.
+                  pip install -r requirements.txt
+
+            # ==============================================
+            # ETAPE 4
+            # Exécution des tests unitaires
+            # ==============================================
+            #
+            # Equivalent à la commande que tu exécutes actuellement dans Git Bash : pytest -v
+
+            # GitHub vérifie automatiquement :
+            # - endpoint /
+            # - endpoint /health
+            # - prédiction nominale
+            # - variable obligatoire absente
+            # - variable inconnue
+            # - multi-clients
+
+            # Si un test échoue :
+            # -> workflow rouge ❌
+
+            # Si tous les tests passent :
+            # -> workflow vert ✅
+
+            - name: Run pytest
+
+              run: |
+
+                  pytest -v

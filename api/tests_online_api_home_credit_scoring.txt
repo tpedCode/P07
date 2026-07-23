@@ -2,56 +2,76 @@
 TESTS RENDER — API HOME CREDIT SCORING
 ======================================================================
 
+
+PROCÉDURE — REFAIRE LES TESTS RENDER
+-------------------------------------
+1. Ouvrir un navigateur web.
+2. Ouvrir l'URL publique de l'API : https://p07-home-credit-scoring.onrender.com
+3. Si le service Render est en veille, attendre son réveil automatique.
+   Vérifier les messages :
+   "Incoming HTTP request detected ..."
+   "Service waking up ..."
+4. Vérifier que l'endpoint d'accueil retourne une réponse HTTP 200 avec les informations du modèle :
+   - status
+   - model
+   - n_features
+   - n_required_features
+   - n_recommended_features
+   - business_threshold
+5. Ouvrir l'endpoint de santé : https://p07-home-credit-scoring.onrender.com/health
+6. Vérifier que la réponse est HTTP 200 avec : {"status": "healthy"}
+7. Ouvrir Swagger public : https://p07-home-credit-scoring.onrender.com/docs
+8. Vérifier que Swagger est accessible et que les endpoints suivants
+   sont disponibles :
+   - GET /
+   - GET /health
+   - POST /predict
+9. Dans Swagger, ouvrir `POST /predict`.
+10. Cliquer sur **Try it out**.
+11. Pour chaque test de prédiction :
+    - Coller le JSON du test.
+    - Cliquer sur **Execute**.
+    - Relever le code HTTP.
+    - Relever le **Response body**.
+    - Copier le résultat observé dans le compte rendu.
+12. Réaliser les tests dans l'ordre
+13. Vérifier que les résultats obtenus sur Render sont cohérents avec les résultats des tests locaux.
+
+## LIENS RAPIDES
+API : https://p07-home-credit-scoring.onrender.com
+Santé : https://p07-home-credit-scoring.onrender.com/health
+Swagger : https://p07-home-credit-scoring.onrender.com/docs
+Prédiction : https://p07-home-credit-scoring.onrender.com/predict
+
+
 STATUT GLOBAL
 -------------
 ✅ Test 1 — Déploiement Render
-✅ Test 2 — Endpoint /
-✅ Test 3 — Endpoint /health
-✅ Test 4 — Swagger public
-✅ Test 5 — Prédiction nominale
-<br>
+✅ Test 2 — Endpoint /health
+✅ Test 3 — Swagger public
+✅ Test 4 — Prédiction nominale
+✅ Test 5 — Variable obligatoire absente
+✅ Test 6 — Type invalide
 
 ======================================================================
 TEST 1 — DEPLOIEMENT RENDER
 ======================================================================
 
-RESULTAT
----------
-Service Render créé :
-- Nom : p07-home-credit-scoring
-- Branche : feat/api
-- Runtime : Python 3
-
-Logs Render :
-```text
-Application startup complete.
-Your service is live 🎉
-```
-
-URL publique :
-```text
-https://p07-home-credit-scoring.onrender.com
-```
-
-CONCLUSION
-----------
-✅ Déploiement réussi.
-✅ Service accessible depuis Internet.
-<br>
-
-======================================================================
-TEST 2 — ENDPOINT D'ACCUEIL (/)
-======================================================================
-
 URL
-----
-```text
+---
 https://p07-home-credit-scoring.onrender.com
-```
 
 RESULTAT OBSERVE
 ----------------
-```json
+
+Le service Render était initialement en veille.
+
+Message affiché :
+"Incoming HTTP request detected ..."
+"Service waking up ..."
+
+Après le réveil du service, l'API a répondu HTTP 200 avec :
+
 {
   "status": "ok",
   "model": "LGBMClassifier",
@@ -60,72 +80,85 @@ RESULTAT OBSERVE
   "n_recommended_features": 6,
   "business_threshold": 0.090909
 }
-```
 
 CONCLUSION
 ----------
-✅ API accessible.
-✅ Modèle chargé.
+
+✅ Service Render opérationnel.
+✅ Service capable de sortir de veille automatiquement.
+✅ API accessible publiquement.
+✅ Modèle LGBMClassifier correctement chargé.
+✅ 246 variables attendues par le modèle.
+✅ 5 variables obligatoires définies.
+✅ 6 variables recommandées définies.
 ✅ Seuil métier chargé.
-✅ Feature names chargées.
-<br>
+⚠️ Le service Free était en veille et nécessite un temps de réveil
+lorsqu'il n'a pas reçu de requête récemment.
 
 ======================================================================
-TEST 3 — ENDPOINT SANTE (/health)
+TEST 2 — ENDPOINT SANTE (/health)
 ======================================================================
 
 URL
-----
-```text
+---
 https://p07-home-credit-scoring.onrender.com/health
-```
 
 RESULTAT OBSERVE
 ----------------
-```json
+
+HTTP 200 OK
+
 {
   "status": "healthy"
 }
-```
 
 CONCLUSION
 ----------
-✅ Endpoint santé opérationnel.
-✅ API disponible.
-<br>
+
+✅ Endpoint de santé opérationnel.
+✅ API disponible en ligne.
 
 ======================================================================
-TEST 4 — SWAGGER PUBLIC
+TEST 3 — SWAGGER PUBLIC
 ======================================================================
 
 URL
-----
-```text
+---
 https://p07-home-credit-scoring.onrender.com/docs
-```
 
 RESULTAT OBSERVE
 ----------------
-Swagger accessible avec les endpoints :
+
+Swagger UI accessible publiquement.
+
+API affichée :
+- Home Credit Scoring API
+- Version : 1.2.0
+- OAS 3.1
+
+Endpoints disponibles :
 - GET /
 - GET /health
 - POST /predict
 
 CONCLUSION
 ----------
-✅ Documentation publique accessible.
-✅ Tests API possibles depuis Internet.
-<br>
+
+✅ Documentation Swagger accessible publiquement.
+✅ Version de l'API affichée : 1.2.0.
+✅ Les endpoints de l'API sont correctement exposés.
+✅ Les tests de l'API peuvent être réalisés directement depuis Internet.
+
 
 ======================================================================
-TEST 5 — PREDICTION NOMINALE
+TEST 4 — PREDICTION NOMINALE
 ======================================================================
 
 JSON ENVOYE
 -----------
-```json
+
 {
-  "requested_by": "test_render",
+  "requested_by": "test_render_nominal",
   "clients": [
     {
       "PAYMENT_RATE": 0.05,
@@ -136,73 +169,154 @@ JSON ENVOYE
     }
   ]
 }
-```
 
 RESULTAT OBSERVE
 ----------------
-```json
-{
-  "requested_by": "test_render",
-  "n_clients": 1,
-  "predictions": [
-    {
-      "client_index": 0,
-      "default_probability": 0.33874,
-      "business_threshold": 0.090909,
-      "decision": "REFUSED",
-      "feature_coverage_rate": 18.91,
-      "prediction_quality": "LOW",
-      "missing_recommended_features": [
-        "EXT_SOURCE_1",
-        "EXT_SOURCE_2",
-        "EXT_SOURCE_3",
-        "DAYS_ID_PUBLISH",
-        "DAYS_REGISTRATION",
-        "DAYS_LAST_PHONE_CHANGE"
-      ]
-    }
-  ]
-}
-```
+
+HTTP 200
+
+- requested_by = "test_render_nominal"
+- n_clients = 1
+- client_index = 0
+- default_probability = 0.338740
+- business_threshold = 0.090909
+- decision = REFUSED
+- feature_coverage_rate = 18.91 %
+- prediction_quality = LOW
+- n_missing_optional_features = 235
+
+missing_recommended_features :
+- EXT_SOURCE_1
+- EXT_SOURCE_2
+- EXT_SOURCE_3
+- DAYS_ID_PUBLISH
+- DAYS_REGISTRATION
+- DAYS_LAST_PHONE_CHANGE
+
+WARNING
+-------
+
+Complétude pondérée : 18.91% (< 50%).
+La prédiction repose sur une faible couverture des variables les plus
+importantes du modèle et doit être interprétée avec prudence.
 
 CONCLUSION
 ----------
-✅ Prédiction réalisée avec succès.
-✅ Modèle chargé correctement sur Render.
-✅ Seuil métier appliqué.
-✅ KPI métier retournés.
-✅ Résultat identique aux tests locaux.
-<br>
+
+✅ Prédiction réalisée avec succès sur Render.
+✅ Modèle chargé correctement sur l'environnement cloud.
+✅ Probabilité de défaut calculée.
+✅ Seuil métier de 0.090909 correctement appliqué.
+✅ Décision REFUSED retournée.
+✅ KPI de couverture des données retourné.
+✅ Les 6 variables recommandées absentes sont correctement signalées.
+✅ Le nombre de variables optionnelles absentes est correctement retourné.
+✅ Résultat cohérent avec le test nominal local.
+⚠️ La couverture des variables importantes reste faible (18,91 %).
+⚠️ La qualité de prédiction est classée LOW.
+
+
+======================================================================
+TEST 5 — VARIABLE OBLIGATOIRE ABSENTE
+======================================================================
+
+JSON ENVOYE
+-----------
+
+{
+  "requested_by": "test_render_required_missing",
+  "clients": [
+    {
+      "PAYMENT_RATE": 0.05,
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT OBSERVE
+----------------
+
+HTTP 422
+
+La variable obligatoire DAYS_BIRTH est absente.
+
+FastAPI/Pydantic retourne :
+
+"type": "missing"
+"loc": ["body", "clients", 0, "DAYS_BIRTH"]
+"msg": "Field required"
+
+CONCLUSION
+----------
+
+✅ Validation des champs obligatoires fonctionnelle sur Render.
+✅ L'absence de DAYS_BIRTH est correctement détectée avant la prédiction.
+✅ Le comportement est cohérent avec le test local.
+
+
+======================================================================
+TEST 6 — TYPE INVALIDE
+======================================================================
+
+JSON ENVOYE
+-----------
+{
+  "requested_by": "test_render_invalid_type",
+  "clients": [
+    {
+      "PAYMENT_RATE": "bonjour",
+      "EXT_SOURCE_MEAN": 0.60,
+      "DAYS_BIRTH": -15000,
+      "DAYS_EMPLOYED": -2000,
+      "AMT_ANNUITY": 15000
+    }
+  ]
+}
+
+RESULTAT OBSERVE
+----------------
+HTTP 422
+
+La variable PAYMENT_RATE contient une chaîne de caractères au lieu
+d'une valeur numérique.
+
+FastAPI/Pydantic retourne :
+"type": "value_error"
+"loc": ["body", "clients", 0, "PAYMENT_RATE"]
+"msg": "Value error, La valeur doit être numérique."
+
+CONCLUSION
+----------
+✅ Validation du type numérique fonctionnelle sur Render.
+✅ Une valeur textuelle est correctement rejetée avant la prédiction.
+
 
 ======================================================================
 BILAN FINAL
 ======================================================================
 
-✅ Déploiement Render réussi
-✅ API publique accessible
-✅ Swagger public accessible
+✅ Service Render déployé avec succès
+✅ Service capable de sortir de veille automatiquement
+✅ API accessible publiquement
 ✅ Endpoint d'accueil validé
-✅ Endpoint santé validé
-✅ Endpoint prédiction validé
-✅ Chargement du modèle validé
-✅ Chargement du seuil validé
-✅ Chargement des feature names validé
+✅ Endpoint de santé validé
+✅ Swagger public accessible
+✅ Endpoint de prédiction validé
+✅ Prédiction nominale validée
+✅ Chargement du modèle LGBMClassifier validé
+✅ Chargement des 246 feature names validé
+✅ Chargement des 5 variables obligatoires validé
+✅ Chargement des 6 variables recommandées validé
+✅ Chargement du seuil métier validé
+✅ Validation des champs obligatoires validée
+✅ Validation du type numérique validée
 ✅ Cohérence entre environnement local et cloud validée
+⚠️ Le service Render Free peut être mis en veille après une période
+   d'inactivité et nécessite alors un temps de réveil.
 ✅ Livrable 1 terminé
-<br>
 
-URL PUBLIQUE
-------------
-```text
-https://p07-home-credit-scoring.onrender.com
-```
-
-SWAGGER PUBLIC
---------------
-```text
-https://p07-home-credit-scoring.onrender.com/docs
-```
-
+======================================================================
 STATUT
--------
-✅ API déployée et opérationnelle sur le cloud
+✅ API déployée et opérationnelle sur le cloud.
