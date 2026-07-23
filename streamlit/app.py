@@ -18,6 +18,55 @@ st.set_page_config(
     layout="wide"
 )
 
+# Style CSS léger pour améliorer la lisibilité.
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    .main-title {
+        font-size: 2.4rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .subtitle {
+        color: #6b7280;
+        font-size: 1.05rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-card {
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        background-color: #f9fafb;
+    }
+
+    .decision-accepted {
+        color: #15803d;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .decision-refused {
+        color: #b91c1c;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ==================================================
 # FONCTIONS API
@@ -35,99 +84,129 @@ def api_get(endpoint):
 
 def api_predict(payload):
     """Envoie une requête de prédiction à l'API."""
-    response = requests.post(
+    return requests.post(
         f"{API_URL}/predict",
         json=payload,
         timeout=60
     )
-    return response
 
 
 # ==================================================
-# TITRE
+# EN-TETE
 # ==================================================
 
-st.title("Home Credit Scoring — API Test")
+st.markdown(
+    '<div class="main-title">💳 Home Credit Scoring</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">'
+    "Interface de test de l'API FastAPI de scoring crédit"
+    "</div>",
+    unsafe_allow_html=True
+)
 
 
 # ==================================================
 # 1. SANTE DE L'API
 # ==================================================
 
-st.header("1. Santé de l'API")
+st.markdown(
+    '<h2 class="section-title">1. Santé de l\'API</h2>',
+    unsafe_allow_html=True
+)
 
 try:
     health = api_get("/health")
 
     if health.get("status") == "healthy":
-        st.success("API opérationnelle")
+        st.success("🟢 API opérationnelle et accessible")
     else:
-        st.warning(f"Statut API inattendu : {health}")
+        st.warning(f"🟠 Statut API inattendu : {health}")
 
 except requests.exceptions.Timeout:
     st.warning(
-        "L'API met du temps à répondre. "
+        "🟠 L'API met du temps à répondre. "
         "Le service Render est peut-être en sortie de veille."
     )
 
 except requests.exceptions.RequestException as error:
-    st.error(f"Impossible de contacter l'API : {error}")
+    st.error(f"🔴 Impossible de contacter l'API : {error}")
 
 
 # ==================================================
 # 2. INFORMATIONS API ET MODELE
 # ==================================================
 
-st.header("2. Informations sur l'API et le modèle")
+st.markdown(
+    '<h2 class="section-title">2. Informations sur l\'API et le modèle</h2>',
+    unsafe_allow_html=True
+)
 
 try:
     api_info = api_get("/")
 
-    st.success("Configuration du modèle")
+    st.success("🟢 Configuration du modèle récupérée")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Modèle", api_info["model"])
-    col1.metric("Nombre de variables", api_info["n_features"])
-
-    col2.metric(
-        "Variables obligatoires",
-        api_info["n_required_features"]
+    col1.metric(
+        "Modèle",
+        api_info["model"]
     )
+
     col2.metric(
-        "Variables recommandées",
-        api_info["n_recommended_features"]
+        "Variables",
+        api_info["n_features"]
     )
 
     col3.metric(
+        "Variables obligatoires",
+        api_info["n_required_features"]
+    )
+
+    col4.metric(
         "Seuil métier",
         api_info["business_threshold"]
     )
 
-    with st.expander("Réponse complète de l'API"):
+    st.caption(
+        f"{api_info['n_recommended_features']} variables recommandées "
+        "pour améliorer la couverture des données."
+    )
+
+    with st.expander("🔎 Voir la réponse complète de l'API"):
         st.json(api_info)
 
 except requests.exceptions.Timeout:
     st.warning(
-        "L'API met trop de temps à répondre. "
+        "🟠 L'API met trop de temps à répondre. "
         "Le service Render est peut-être en veille."
     )
 
 except requests.exceptions.RequestException as error:
-    st.error(f"Impossible de récupérer les informations : {error}")
+    st.error(
+        f"🔴 Impossible de récupérer les informations : {error}"
+    )
 
 
 # ==================================================
 # 3. TEST DE PREDICTION
 # ==================================================
 
-st.header("3. Test de prédiction")
+st.markdown(
+    '<h2 class="section-title">3. Test de prédiction</h2>',
+    unsafe_allow_html=True
+)
 
-# Les scénarios permettent de reproduire depuis Streamlit
-# les principaux tests déjà réalisés dans Swagger.
+st.info(
+    "Sélectionnez un scénario pour tester différents comportements "
+    "de validation et de prédiction de l'API."
+)
 
 test_scenario = st.selectbox(
-    "Choisissez un scénario de test",
+    "Scénario de test",
     [
         "Prédiction nominale",
         "Variable obligatoire absente",
@@ -164,28 +243,24 @@ if test_scenario == "Prédiction nominale":
 
 elif test_scenario == "Variable obligatoire absente":
 
-    # DAYS_BIRTH est supprimée pour vérifier la validation Pydantic.
     client = base_client.copy()
     del client["DAYS_BIRTH"]
     clients = [client]
 
 elif test_scenario == "Type invalide":
 
-    # Une chaîne remplace une valeur numérique.
     client = base_client.copy()
     client["PAYMENT_RATE"] = "bonjour"
     clients = [client]
 
 elif test_scenario == "Valeur booléenne":
 
-    # Un booléen est volontairement transmis à l'API.
     client = base_client.copy()
     client["PAYMENT_RATE"] = True
     clients = [client]
 
 elif test_scenario == "Variable inconnue":
 
-    # Cette variable n'existe pas dans feature_names du modèle.
     client = base_client.copy()
     client["PAYMENT_RAT"] = 0.05
     clients = [client]
@@ -213,8 +288,6 @@ elif test_scenario == "Variable optionnelle":
 
 else:
 
-    # Ce scénario vérifie le traitement de plusieurs clients
-    # dans une seule requête POST /predict.
     clients = [
         base_client,
         {
@@ -234,12 +307,12 @@ payload = {
 
 
 # ==================================================
-# AFFICHAGE DES DONNEES
+# APERCU DU TEST
 # ==================================================
 
-st.subheader("Données envoyées à l'API")
+st.subheader(f"🧪 Scénario : {test_scenario}")
 
-with st.expander("Afficher le JSON envoyé"):
+with st.expander("📤 Voir le JSON envoyé à l'API"):
     st.json(payload)
 
 
@@ -247,67 +320,90 @@ with st.expander("Afficher le JSON envoyé"):
 # LANCEMENT DU TEST
 # ==================================================
 
-if st.button("Lancer le test"):
+if st.button(
+    "🚀 Lancer le test",
+    type="primary",
+    use_container_width=True
+):
 
     try:
 
         response = api_predict(payload)
 
-        # On affiche toujours le code HTTP.
-        # Cela permet de distinguer les tests réussis (200)
-        # des tests de validation rejetés par l'API (422).
-        st.subheader("Résultat du test")
+        st.divider()
 
-        st.write(
-            f"Code HTTP : **{response.status_code}**"
-        )
+        # ==================================================
+        # STATUT HTTP
+        # ==================================================
+
+        if response.status_code == 200:
+            st.success(
+                f"🟢 Test réussi — HTTP {response.status_code}"
+            )
+
+        elif response.status_code == 422:
+            st.warning(
+                f"🟠 Requête correctement rejetée — HTTP {response.status_code}"
+            )
+
+        else:
+            st.error(
+                f"🔴 Erreur API — HTTP {response.status_code}"
+            )
 
         result = response.json()
 
+
         # ==================================================
-        # TESTS DE PREDICTION REUSSIS
+        # RESULTATS DE PREDICTION
         # ==================================================
 
         if response.status_code == 200:
 
-            st.success(
-                "Prédiction réalisée avec succès"
-            )
-
             predictions = result["predictions"]
 
-            # Un résultat est affiché pour chaque client.
+            st.subheader("📊 Résultat du scoring")
+
             for prediction in predictions:
 
                 st.divider()
 
-                st.subheader(
-                    f"Client {prediction['client_index'] + 1}"
+                st.markdown(
+                    f"### Client {prediction['client_index'] + 1}"
                 )
 
                 col1, col2, col3 = st.columns(3)
 
                 col1.metric(
                     "Probabilité de défaut",
-                    prediction["default_probability"]
+                    f"{prediction['default_probability']:.6f}"
                 )
 
                 col2.metric(
                     "Seuil métier",
-                    prediction["business_threshold"]
+                    f"{prediction['business_threshold']:.6f}"
                 )
 
                 if prediction["decision"] == "ACCEPTED":
-                    col3.success(
-                        f"Décision : {prediction['decision']}"
-                    )
-                else:
-                    col3.error(
-                        f"Décision : {prediction['decision']}"
+
+                    col3.markdown(
+                        '<div class="decision-accepted">'
+                        "🟢 ACCEPTED"
+                        "</div>",
+                        unsafe_allow_html=True
                     )
 
-                # La couverture mesure la proportion pondérée
-                # des variables importantes effectivement fournies.
+                else:
+
+                    col3.markdown(
+                        '<div class="decision-refused">'
+                        "🔴 REFUSED"
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+                col1, col2, col3 = st.columns(3)
+
                 col1.metric(
                     "Couverture des variables",
                     f"{prediction['feature_coverage_rate']} %"
@@ -324,31 +420,37 @@ if st.button("Lancer le test"):
                 )
 
                 if prediction["missing_recommended_features"]:
+
                     st.warning(
-                        "Variables recommandées absentes : "
-                        f"{prediction['missing_recommended_features']}"
-                    )
-                else:
-                    st.success(
-                        "Toutes les variables recommandées sont présentes."
+                        "⚠️ Variables recommandées absentes : "
+                        f"{', '.join(prediction['missing_recommended_features'])}"
                     )
 
-                st.subheader("Warning")
-                st.warning(prediction["warning"])
+                else:
+
+                    st.success(
+                        "✅ Toutes les variables recommandées sont présentes."
+                    )
+
+                with st.expander("⚠️ Voir le warning métier"):
+                    st.warning(prediction["warning"])
+
 
         # ==================================================
-        # TESTS DE VALIDATION REJETES
+        # ERREURS DE VALIDATION
         # ==================================================
 
         elif response.status_code == 422:
 
-            st.warning(
-                "La requête a été correctement rejetée par l'API."
+            st.subheader("🔎 Détail de la validation")
+
+            st.info(
+                "L'API a correctement détecté une donnée invalide "
+                "et a rejeté la requête."
             )
 
-            # La réponse 422 permet de vérifier que FastAPI/Pydantic
-            # détecte correctement les données invalides.
             st.json(result)
+
 
         # ==================================================
         # AUTRES ERREURS HTTP
@@ -356,24 +458,23 @@ if st.button("Lancer le test"):
 
         else:
 
-            st.error(
-                f"L'API a retourné une erreur HTTP "
-                f"{response.status_code}."
-            )
+            st.subheader("❌ Détail de l'erreur")
 
             st.json(result)
+
 
         # ==================================================
         # REPONSE COMPLETE
         # ==================================================
 
-        with st.expander("Réponse complète de l'API"):
+        with st.expander("📥 Voir la réponse complète de l'API"):
+
             st.json(result)
 
     except requests.exceptions.Timeout:
 
         st.error(
-            "L'API met trop de temps à répondre. "
+            "⏱️ L'API met trop de temps à répondre. "
             "Le service Render est peut-être en veille. "
             "Attendez quelques secondes puis relancez le test."
         )
@@ -381,19 +482,17 @@ if st.button("Lancer le test"):
     except requests.exceptions.RequestException as error:
 
         st.error(
-            f"Erreur lors de la communication avec l'API : {error}"
+            f"🔴 Erreur lors de la communication avec l'API : {error}"
         )
 
     except ValueError:
 
         st.error(
-            "La réponse reçue par Streamlit n'est pas un JSON valide."
+            "🔴 La réponse reçue par Streamlit n'est pas un JSON valide."
         )
 
     except KeyError as error:
 
         st.error(
-            f"La réponse de l'API ne contient pas la clé attendue : {error}"
+            f"🔴 La réponse de l'API ne contient pas la clé attendue : {error}"
         )
-
-        st.json(result)
