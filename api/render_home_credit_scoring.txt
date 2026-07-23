@@ -1,0 +1,73 @@
+# ==================================================
+# PROCEDURE — VERIFIER L'API DEPLOYEE SUR RENDER
+# ==================================================
+
+## PROCEDURE — OUVRIR ET TESTER L'API SUR RENDER
+-----------------------------------------------
+
+1. Ouvrir un navigateur web.
+2. Se connecter à Render.
+3. Ouvrir le service Web Service : `p07-home-credit-scoring`
+4. Vérifier que le service est déployé et opérationnel.
+5. Vérifier la branche et le commit utilisés pour le déploiement.
+6. Vérifier que le déploiement est terminé avec le statut `Live`.
+7. Ouvrir l'URL publique de l'API : `https://p07-home-credit-scoring.onrender.com`
+8. Vérifier que l'endpoint d'accueil retourne une réponse HTTP 200.
+9. Vérifier les informations retournées :
+   * status ;
+   * model ;
+   * n_features ;
+   * n_required_features ;
+   * n_recommended_features ;
+   * business_threshold.
+10. Ouvrir l'endpoint de santé : `https://p07-home-credit-scoring.onrender.com/health`
+11. Vérifier que la réponse est HTTP 200 avec : `{"status": "healthy"}`
+12. Ouvrir Swagger public : `https://p07-home-credit-scoring.onrender.com/docs`
+13. Vérifier que les endpoints suivants sont disponibles :
+    * GET `/`
+    * GET `/health`
+    * POST `/predict`
+14. Ouvrir `POST /predict`.
+15. Cliquer sur **Try it out**.
+16. Envoyer un client de test avec les 5 variables obligatoires.
+17. Vérifier que la réponse retourne HTTP 200.
+18. Vérifier les résultats du scoring :
+    * default_probability ;
+    * business_threshold ;
+    * decision ;
+    * feature_coverage_rate ;
+    * data_completeness_level ;
+    * missing_recommended_features ;
+    * n_missing_optional_features ;
+    * warning.
+19. Vérifier que le résultat obtenu est cohérent avec les tests locaux.
+20. Vérifier que le modèle chargé sur Render est bien le modèle attendu.
+21. Vérifier que le seuil métier utilisé correspond au seuil optimisé lors de l'entraînement.
+22. Une fois les tests terminés, conserver les résultats pour le compte rendu et les captures d'écran de soutenance.
+
+## LIENS RAPIDES
+API : `https://p07-home-credit-scoring.onrender.com`
+Santé : `https://p07-home-credit-scoring.onrender.com/health`
+Swagger : `https://p07-home-credit-scoring.onrender.com/docs`
+Prédiction : `https://p07-home-credit-scoring.onrender.com/predict`
+
+## STATUT GLOBAL
+□ Service Render ouvert
+□ Déploiement terminé
+□ Service avec le statut `Live`
+□ Branche et commit vérifiés
+□ API publique accessible
+□ Endpoint `/` testé
+□ Endpoint `/health` testé
+□ Swagger public accessible
+□ Endpoint `/predict` testé
+□ Prédiction nominale validée
+□ Probabilité de défaut vérifiée
+□ Seuil métier vérifié
+□ Décision vérifiée
+□ Couverture des variables vérifiée
+□ Niveau de complétude vérifié
+□ Variables recommandées absentes vérifiées
+□ Warning vérifié
+□ Cohérence avec les tests locaux validée
+□ API Render prête pour la capture d'écran de soutenance
