@@ -1,0 +1,114 @@
+# ==================================================
+# PROCEDURE — TESTER L'API AVEC STREAMLIT
+# ==================================================
+
+## PROCEDURE — OUVRIR ET UTILISER L'INTERFACE STREAMLIT
+-------------------------------------------------------
+
+1. Ouvrir le projet P07 dans VS Code.
+2. Ouvrir un terminal dans VS Code.
+3. Vérifier que le terminal se trouve bien dans le dossier du projet P07 : ```bash pwd````
+4. Vérifier que le dossier Streamlit contient le fichier : ```text streamlit/└── app.py```
+5. Vérifier que l'environnement virtuel contenant Streamlit et Requests est disponible.
+6. Activer l'environnement virtuel : ```bash source mlflow_env/Scripts/activate```
+7. Vérifier que Streamlit est disponible : ```bash pip show streamlit```
+8. Vérifier que Requests est disponible : ```bash pip show requests```
+9. Démarrer l'interface Streamlit : ```bash streamlit run streamlit/app.py```
+10. Ouvrir l'interface Streamlit dans le navigateur.
+11. Vérifier que la page `Home Credit Scoring — API Test` est accessible.
+12. Vérifier la santé de l'API depuis l'interface.
+13. Vérifier que l'API est indiquée comme opérationnelle.
+14. Vérifier les informations affichées sur le modèle :
+    * modèle utilisé ;
+    * nombre de variables ;
+    * nombre de variables obligatoires ;
+    * nombre de variables recommandées ;
+    * seuil métier.
+15. Renseigner un identifiant de test.
+16. Saisir les 5 variables obligatoires :
+    * PAYMENT_RATE ;
+    * EXT_SOURCE_MEAN ;
+    * DAYS_BIRTH ;
+    * DAYS_EMPLOYED ;
+    * AMT_ANNUITY.
+17. Lancer le test de prédiction.
+18. Vérifier les données envoyées à l'API.
+19. Vérifier que la prédiction est réalisée avec succès.
+20. Vérifier les résultats du scoring :
+    * probabilité de défaut ;
+    * seuil métier ;
+    * décision ;
+    * couverture des variables ;
+    * complétude des données ;
+    * variables recommandées absentes ;
+    * variables optionnelles absentes ;
+    * warning.
+21. Vérifier la réponse complète retournée par l'API.
+22. Comparer les résultats affichés dans Streamlit avec ceux obtenus directement dans Swagger sur Render.
+23. Vérifier que les résultats sont identiques ou cohérents.
+24. Conserver les résultats pour le compte rendu et les captures d'écran de soutenance.
+
+## TEST DE REFERENCE
+
+Client de test :
+```text
+PAYMENT_RATE = 0.05
+EXT_SOURCE_MEAN = 0.60
+DAYS_BIRTH = -15000
+DAYS_EMPLOYED = -2000
+AMT_ANNUITY = 15000
+```
+
+Résultats attendus :
+```text
+default_probability = 0.338740
+business_threshold = 0.090909
+decision = REFUSED
+feature_coverage_rate = 18.91 %
+data_completeness_level = LOW
+n_missing_optional_features = 235
+```
+
+Variables recommandées absentes :
+```text
+EXT_SOURCE_1
+EXT_SOURCE_2
+EXT_SOURCE_3
+DAYS_ID_PUBLISH
+DAYS_REGISTRATION
+DAYS_LAST_PHONE_CHANGE
+```
+
+## LIENS RAPIDES
+Interface Streamlit locale : `http://localhost:8501`
+API Render : `https://p07-home-credit-scoring.onrender.com`
+Swagger Render : `https://p07-home-credit-scoring.onrender.com/docs`
+
+## STATUT GLOBAL
+□ Projet P07 ouvert dans VS Code
+□ Terminal VS Code ouvert
+□ Environnement virtuel activé
+□ Streamlit installé
+□ Requests installé
+□ Dossier `streamlit/` présent
+□ Fichier `streamlit/app.py` présent
+□ Interface Streamlit démarrée
+□ Interface Streamlit accessible
+□ Santé de l'API vérifiée
+□ API indiquée comme opérationnelle
+□ Informations du modèle affichées
+□ Variables obligatoires saisies
+□ Test de prédiction exécuté
+□ Données envoyées vérifiées
+□ Probabilité de défaut affichée
+□ Seuil métier affiché
+□ Décision affichée
+□ Couverture des variables affichée
+□ Complétude des données affichée
+□ Variables recommandées absentes affichées
+□ Variables optionnelles absentes affichées
+□ Warning affiché
+□ Réponse complète de l'API affichée
+□ Résultat comparé avec Swagger Render
+□ Résultats cohérents entre Streamlit et Render
+□ Interface Streamlit prête pour la capture d'écran de soutenance
